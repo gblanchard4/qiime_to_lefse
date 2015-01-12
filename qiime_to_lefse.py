@@ -2,33 +2,33 @@
 import argparse
 import os
 import sys
-def format_from_map(mapping_file, categories, outfile):
+
+def append_otu_info(taxa_table, outfile, sample_dict, categories):
 	category1, category2 = categories.split(',')
-	sample_id_list = []
-	category1_list = []
-	category2_list = []
-	with open(mapping_file, 'r' ) as map_handle:
-		for line in map_handle:
-			if line.startswith('#'):
-				header_list = line.rstrip().split('\t') 
-				category1_index = header_list.index(category1)
-				category2_index = header_list.index(category2)
-			else:
-				line_list = line.split('\t')
-				sample_id_list.append(line_list[0])
-				category1_list.append(line_list[category1_index])
-				category2_list.append(line_list[category2_index])
-
-	# Read file, now write lines sampleid, cat1, cat2
-	with open(outfile, 'w') as lefse:
-		lefse.write("SampleID\t{}\n".format('\t'.join(sample_id_list)))
-		lefse.write("{}\t{}\n".format(category1, '\t'.join(category1_list)))
-		lefse.write("{}\t{}\n".format(category2, '\t'.join(category2_list)))
-
-def append_otu_info(taxa_table, outfile):
+	# Headers to strip off
 	taxa_headers = ["k__", "p__", "c__", "o__", "f__", "g__", "s__"]
-	with open(taxa_table, 'r') as otus, open(outfile, 'a') as lefse:
+	# Open the files to read/wrire
+	with open(taxa_table, 'r') as otus, open(outfile, 'w') as lefse:
 		for line in otus:
+			# Get the order of samples to write the category lines
+			if line.startswith('Taxon'):
+				# Write the sampleid line
+				lefse.write(line)
+				# Prepare the category lines 
+				category1_line = "{}\t".format(category1)
+				category2_line = "{}\t".format(category2)
+				#Split the line and exclude the "Taxon"
+				for sample_id in line.rstrip('\n').split('\t')[1::]:
+					# Add cat1 value to buffer
+					category1_line += "{}\t".format(sample_dict[sample_id][0])
+					# Add cat2 value to buffer
+					category2_line += "{}\t".format(sample_dict[sample_id][1])
+				# Add newlines
+				category1_line += "\n"
+				category2_line += "\n"
+				# Write Lines
+				lefse.write(category1_line)
+				lefse.write(category2_line)
 			if not line.startswith('Taxon'):
 				taxa, abundance =  line.split('\t', 1)
 				# Replace semicolons with pipes
@@ -39,8 +39,29 @@ def append_otu_info(taxa_table, outfile):
 						taxa = taxa.replace(header, '')
 				# Remove orphan pipe
 				taxa = taxa.rstrip('|')
-
 				lefse.write("{}\t{}".format(taxa, abundance))
+
+def map_to_dictionary(mapping_file, categories):
+	sample_dict = {}
+	category1, category2 = categories.split(',')
+	with open(mapping_file, 'r' ) as map_handle:
+		for line in map_handle:
+			if line.startswith('#'):
+				header_list = line.rstrip().split('\t') 
+				category1_index = header_list.index(category1)
+				category2_index = header_list.index(category2)
+			else:
+				line_list = line.split('\t')
+				sample_id = line_list[0]
+				category1_value = line_list[category1_index]
+				category2_value = line_list[category2_index]
+				sample_dict[sample_id] = (category1_value, category2_value)
+	return sample_dict
+
+
+
+
+
 
 
 def main():
@@ -64,9 +85,8 @@ def main():
 		print "Error: Check categories"
 		sys.exit()
 
-
-	format_from_map(mapping_file, categories, outfile)
-	append_otu_info(taxa_table, outfile)
+	sample_dict = map_to_dictionary(mapping_file, categories)
+	append_otu_info(taxa_table, outfile, sample_dict, categories)
 
 
 
