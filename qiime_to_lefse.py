@@ -70,14 +70,14 @@ def main():
     # Output file
     parser.add_argument('-o', '--output', dest='out', help='The Lefse formatted output file', required=True)
     # Categories
-    parser.add_argument('-c', '--categories', dest='categories', nargs='*', help='Space seperated list of categories', required=True)
+    parser.add_argument('-c', '--categories', dest='categories',help='Comma seperated list of categories', required=True)
 
     # Parse arguments
     args = parser.parse_args()
     mapfile = args.map
     taxafile = args.taxa
     outfile = args.out
-    categories = args.categories
+    categories = args.categories.split(',')
 
     sample_dict = map_to_dictionary(mapfile, categories)
     append_otu_info(taxafile, outfile, sample_dict, categories)
