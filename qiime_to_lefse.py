@@ -79,6 +79,12 @@ def append_otu_info(taxa_table, outfile, sample_dict, categories, clean):
                         taxa = taxa.replace(header, '')
                 # Remove orphan pipe
                 taxa = taxa.rstrip('|')
+                if taxa in taxa_dict:
+                    # Add abundances
+                    abundance_sum = [float(a1 + a2) for a1, a2 in zip(abundance, taxa_dict[taxa])]
+                    taxa_dict[taxa] = abundance_sum
+                else:
+                    taxa_dict[taxa] = abundance
                 taxa_dict[taxa] = abundance
         # Write the output
         for key in taxa_dict:
