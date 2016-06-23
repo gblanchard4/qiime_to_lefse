@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/22868/gblanchard4/qiime_to_lefse.svg)](https://zenodo.org/badge/latestdoi/22868/gblanchard4/qiime_to_lefse)
+
 # qiime_to_lefse
 Convert Qiime taxa tables and mapping files to a LEfSe formatted file
 
